@@ -2,6 +2,7 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import {prisma} from '../../prisma';
+//import bcrypt from "bcrypt";
 
 
 const router = express.Router();
@@ -10,7 +11,7 @@ router.post('/password-reset-link', async (req, res) => {
   const { email } = req.body;
   // todo: write your code here
   // 1. verify if email is in database
-
+  
   const timestamp = Date.now();
   const currentDate = new Date(timestamp);
 
@@ -22,7 +23,7 @@ router.post('/password-reset-link', async (req, res) => {
 
   // Create a reset token and expiry date for the user
   await prisma.user.update({
-    where: { email: user.email },
+    where: { email: email },
     data: {
       resetToken: token,
       resetTokenExpiry: Date.now() + 3600000, // 1 hour from now
@@ -66,21 +67,51 @@ router.post('/password-reset/confirm', async (req, res) => {
   // 5. Invalidate the token so it can't be used again
   // 6. Send a response to the frontend
   const { token, password } = req.body;
-  // console.log(token, password);
+   console.log(token, password);
   
   // 1. Find the user by the token
-
+  const user = await prisma.user.findUnique({
+    where:{
+      resetToken: token
+    }
+  });
   // 2. Verify that the token hasn't expired (assuming you have an expiry date in your DB)
   // If you have a resetTokenExpiry field in your User model:
-
+  const time = Date.now();
+  if(user?.resetTokenExpiry == null){
+    return res.status(400).send({ error: 'Token does not exist.' });
+  }
+  else{
+    if (user.resetTokenExpiry < time) {
+      return res.status(400).send({ error: 'Token has expired.' });
+    }
+  }
+  
 
   // 3. Hash the new password
-  // const hashedPassword = await bcrypt.hash(password, 10);
+  const bcrypt = require('bcrypt');
+   const hashedPassword = await bcrypt.hash(password, 10);
 
   // 4. Update the user's password in the database
-
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      password: hashedPassword,
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
 
   // 6. Send a response to the frontend
+  try{
+    res.status(200).send({ message: 'Password has been changed.' });
+} 
+  catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).send({ error: 'Failed to change password' });
+}
 
 });
 

@@ -8,6 +8,7 @@ import {prisma} from '../../prisma';
 const router = express.Router();
 
 router.post('/password-reset-link', async (req, res) => {
+  console.log("password-reset-link")
   const { email } = req.body;
   // todo: write your code here
   // 1. verify if email is in database
@@ -39,10 +40,10 @@ router.post('/password-reset-link', async (req, res) => {
 
   // Create a transporter object using the default SMTP transport
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Use your preferred email service
+    service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: process.env.EMAIL,
+      pass: process.env.PASSWORD
     }
   });
 

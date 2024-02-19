@@ -15,7 +15,11 @@ router.post('/signup', async (req, res) => {
       }
   
       // Create a new user
-      await prisma.user.create({ data: { username, email, password } });
+     // const bcrypt = require('bcrypt');
+     // var passHash:string = await bcrypt.hash(password, 10);
+
+     //Tried to create hashed password, but type script variable handling preventing this
+      await prisma.user.create({ data: { username, email, password} });
   
       return res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -35,6 +39,14 @@ router.post('/login', async (req, res) => {
     }
 
     // Compare the provided password with the stored password
+
+    /*Tried to create hashed password, but type script variable handling preventing this
+    const bcrypt = require('bcrypt');
+    const clientHash = await bcrypt.hash(user.password, 10);
+    const dbHash = await bcrypt.hash(password, 10);
+    if (clientHash !== dbHash) {
+      return res.status(401).json({ error: 'Invalid username or password' });
+    }*/
     if (user.password !== password) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
